@@ -123,7 +123,7 @@ namespace CollegeMVC.Controllers.api
             {
                 using (SqlConnection connection = new SqlConnection(connectionString)) {
                     connection.Open ();
-                    string query = $@"UPDATE Student SET  FirstName='{student.Firstname}',LastName='{student.LastName}',BirthDay='{student.BirthDay}',Email='{student.Email}',YearOfStudey='{student.YearOfStudy}' ";
+                    string query = $@"UPDATE Student SET  FirstName='{student.Firstname}',LastName='{student.LastName}',BirthDay='{student.BirthDay}',Email='{student.Email}',YearOfStudey='{student.YearOfStudy}'  WHERE Id={id} ";
                     SqlCommand cmd= new SqlCommand(query,connection);
                     cmd.ExecuteNonQuery();
                     connection.Close();                
