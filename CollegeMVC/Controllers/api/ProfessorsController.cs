@@ -11,34 +11,17 @@ namespace CollegeMVC.Controllers.api
 {
     public class ProfessorsController : ApiController
     {
-        string connectionString = "Data Source=LAPTOP-E49VKATT;Initial Catalog=College;Integrated Security=True;Pooling=False";
+        static string connectionString = "Data Source=LAPTOP-E49VKATT;Initial Catalog=College;Integrated Security=True;Pooling=False";
+        DataClasses1DataContext collegeDataContext = new DataClasses1DataContext(connectionString);
         // GET: api/Professors
         public IHttpActionResult Get()
         {
-            List<Professor> professorsList = new List<Professor>();
+
             try
             {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-
-                    string query = $@"SELECT * FROM Professors";
-                    SqlCommand command = new SqlCommand(query, connection);
-                    SqlDataReader reader = command.ExecuteReader();
-                    if (reader.HasRows)
-                    {
-                        while (reader.Read())
-                        {
-                            professorsList.Add(new Professor(reader.GetString(1), reader.GetString(2), reader.GetString(3), reader.GetString(4), reader.GetInt32(5)));
-                        }
-                        return Ok(new { professorsList });
-                    }
-                    connection.Close();
-                    return Ok(new { professorsList });
-                }
-
-
+                return Ok(collegeDataContext.Professors.ToList());
             }
+
             catch (SqlException ex)
             {
                 return Ok(new { ex.Message });
@@ -50,29 +33,12 @@ namespace CollegeMVC.Controllers.api
 
         }
 
-        // GET: api/Professors/5
+        //// GET: api/Professors/5
         public IHttpActionResult Get(int id)
         {
             try
             {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    string query = $@"SELECT * FROM Professors WHERE Id={id}";
-                    SqlCommand command = new SqlCommand(query, connection);
-                    SqlDataReader reader = command.ExecuteReader();
-                    if (reader.HasRows)
-                    {
-                        while (reader.Read())
-                        {
-                            Professor professor = new Professor(reader.GetString(1), reader.GetString(2), reader.GetString(3), reader.GetString(4), reader.GetInt32(5));
-                            return Ok(new { professor });
-                        }
-
-                    }
-                    connection.Close();
-                    return Ok(new { Message = "not found" });
-                }
+                return Ok(collegeDataContext.Professors.First((studetItem) => studetItem.Id == id));
             }
             catch (SqlException ex)
             {
@@ -84,20 +50,15 @@ namespace CollegeMVC.Controllers.api
             }
         }
 
-        // POST: api/Professors
+        //// POST: api/Professors
         public IHttpActionResult Post([FromBody] Professor professor)
         {
             try
             {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    string query = $@"INSERT INTO Professors(FirstName,LastName,Subject,Email,Salary) VALUES('{professor.FirstName}','{professor.LastName}','{professor.Subject}','{professor.Email}',{professor.Salary}) ";
-                    SqlCommand command = new SqlCommand(query, connection);
-                    command.ExecuteNonQuery();
-                    connection.Close();
-                    return Ok(new { message = "Professor add" });
-                }
+
+                collegeDataContext.Professors.InsertOnSubmit(professor);
+                collegeDataContext.SubmitChanges();
+                return Ok("item was add");
 
             }
             catch (SqlException ex)
@@ -111,21 +72,23 @@ namespace CollegeMVC.Controllers.api
 
         }
 
-        // PUT: api/Professors/5
+        //// PUT: api/Professors/5
         public IHttpActionResult Put(int id, [FromBody] Professor professor)
         {
             try
             {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    string query = $@"UPDATE Professors SET  FirstName='{professor.FirstName}',LastName='{professor.LastName}',Subject='{professor.Subject}',Email='{professor.Email}',Salary={professor.Salary} WHERE Id={id} ";
-                    SqlCommand cmd = new SqlCommand(query, connection);
-                    cmd.ExecuteNonQuery();
-                    connection.Close();
-                    return Ok(new { message = "the Professor was update" });
 
-                }
+                Professor professorFound = collegeDataContext.Professors.First((professorItem) => professorItem.Id == id);
+                professorFound.FirstName = professor.FirstName;
+                professorFound.LastName = professor.LastName;
+                professorFound.Email = professor.Email;
+                professorFound.Subject = professor.Subject;
+                professorFound.Salary = professor.Salary;
+
+                collegeDataContext.SubmitChanges();
+                return Ok(" item was update");
+
+
 
             }
             catch (SqlException ex)
@@ -145,16 +108,11 @@ namespace CollegeMVC.Controllers.api
 
             try
             {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    string query = $@"DELETE FROM Professors WHERE Id={id} ";
-                    SqlCommand cmd = new SqlCommand(query, connection);
-                    cmd.ExecuteNonQuery();
-                    connection.Close();
-                    return Ok(new { message = "item was Deleted" });
 
-                }
+                collegeDataContext.Professors.DeleteOnSubmit(collegeDataContext.Professors.First((professorItem) => professorItem.Id == id));
+                collegeDataContext.SubmitChanges();
+
+                return Ok("item was daleted");
 
             }
             catch (SqlException ex)

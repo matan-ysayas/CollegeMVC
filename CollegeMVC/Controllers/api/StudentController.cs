@@ -11,77 +11,44 @@ namespace CollegeMVC.Controllers.api
 {
     public class StudentController : ApiController
     {
-        string connectionString = "Data Source=LAPTOP-E49VKATT;Initial Catalog=College;Integrated Security=True;Pooling=False";
+       static string connectionString = "Data Source=LAPTOP-E49VKATT;Initial Catalog=College;Integrated Security=True;Pooling=False";
+
+       DataClasses1DataContext collegeDataContext=new DataClasses1DataContext(connectionString);
         // GET: api/Student
         public IHttpActionResult Get()
         {
-        List<Student> studentsList = new List<Student>();
+       
             try
             {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    string query = "SELECT * FROM Student";
-                    SqlCommand cmd = new SqlCommand(query, connection);
-                    SqlDataReader reader = cmd.ExecuteReader();
-                    if (reader.HasRows)
-                    {
-                        while (reader.Read())
-                        {
-                            studentsList.Add(new Student(reader.GetString(1), reader.GetString(2), reader.GetDateTime(3), reader.GetString(4), reader.GetInt32(5)));
-                        }
-                        return Ok(new { studentsList });
-                    }
-                    connection.Close();
-                    return Ok(new { studentsList });
-
-                   
-                }
-                
-
+                return Ok(collegeDataContext.Students.ToList());
             }
 
-            catch (SqlException )
+            catch (SqlException ex)
             {
-                throw; 
+                return Ok(new { ex.Message });
             }
-            catch (Exception )
+            catch (Exception ex )
             {
-                throw;
+                return Ok(new { ex.Message });
             }
         }
 
-        // GET: api/Student/5
+        //GET: api/Student/5
         public IHttpActionResult Get(int id)
         {
             try
             {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    string query = $"SELECT * FROM Student WHERE Id={id}";
-                    SqlCommand cmd = new SqlCommand(query, connection);
-                    SqlDataReader reader = cmd.ExecuteReader();
-                    if (reader.HasRows)
-                    {
-                        while (reader.Read())
-                        {
-                            Student studentFind = new Student(reader.GetString(1), reader.GetString(2), reader.GetDateTime(3), reader.GetString(4), reader.GetInt32(5));
-                            return Ok(new { studentFind });
-                        }
+               
+                return Ok(collegeDataContext.Students.First((studetItem) => studetItem.Id == id));
 
-                    }
-                    connection.Close();
-                    return Ok( new{ Message= "not found"});
-                    
-                }
-
-            } catch (SqlException ex)
+            }
+            catch (SqlException ex)
             {
-                throw;
-            } catch (Exception)
+                return Ok(new {ex.Message});
+            }
+            catch (Exception ex)
             {
-                throw;
+                return Ok(new { ex.Message });
             }
 
         }
@@ -91,72 +58,62 @@ namespace CollegeMVC.Controllers.api
         {
             try
             {
-                using (SqlConnection connection = new SqlConnection(connectionString)) {
-                    connection.Open();
-                    string query = $@"INSERT INTO Student(FirstName,LastName,BirthDay,Email,YearOfStudey) VALUES('{student.Firstname}','{student.LastName}','{student.BirthDay}','{student.Email}',{student.YearOfStudy}) ";
-                    SqlCommand cmd = new SqlCommand(query,connection);
-                    cmd.ExecuteNonQuery();
-                    connection.Close();
-                    return Ok(new { message="add student" }); 
-                    
-
-                }
-
-            }catch (SqlException ex)
+              collegeDataContext.Students.InsertOnSubmit(student);
+                collegeDataContext.SubmitChanges();
+                return Ok("item was add");
+            }
+            catch (SqlException ex)
             {
-                return Ok(new{ex.Message});
-               
+                return Ok(new { ex.Message });
+
             }
             catch (Exception ex)
             {
-                return Ok(new {ex.Message });
+                return Ok(new { ex.Message });
                 throw;
             }
-            
-        }
 
-        // PUT: api/Student/5
+            }
+
+        //// PUT: api/Student/5
         public IHttpActionResult Put(int id, [FromBody] Student student)
         {
 
             try
             {
-                using (SqlConnection connection = new SqlConnection(connectionString)) {
-                    connection.Open ();
-                    string query = $@"UPDATE Student SET  FirstName='{student.Firstname}',LastName='{student.LastName}',BirthDay='{student.BirthDay}',Email='{student.Email}',YearOfStudey='{student.YearOfStudy}'  WHERE Id={id} ";
-                    SqlCommand cmd= new SqlCommand(query,connection);
-                    cmd.ExecuteNonQuery();
-                    connection.Close();                
-                    return Ok(new { message = "the student was update" });
+                Student studentFound = collegeDataContext.Students.First((studentItem) => studentItem.Id == id);
+                studentFound.FirstName= student.FirstName;
+                studentFound.LastName= student.LastName;
+                studentFound.Email= student.Email;
+                studentFound.BirthDay= student.BirthDay;
+                studentFound.YearOfStudey= student.YearOfStudey;
+                collegeDataContext.SubmitChanges();
+                return Ok(" item was update");
 
-                }
 
-            }catch (SqlException ex)
-            {
-                return Ok(new {ex.Message});
-            }catch (Exception ex)
+            }
+            catch (SqlException ex)
             {
                 return Ok(new { ex.Message });
             }
-            
+            catch (Exception ex)
+            {
+                return Ok(new { ex.Message });
+            }
+
         }
 
-        // DELETE: api/Student/5
+        //// DELETE: api/Student/5
         public IHttpActionResult Delete(int id)
         {
 
             try
             {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    string query = $@"DELETE FROM Student WHERE Id={id} ";
-                    SqlCommand cmd = new SqlCommand(query, connection);
-                    cmd.ExecuteNonQuery();
-                    connection.Close();
-                    return Ok(new { message = "item was Deleted" });
 
-                }
+             collegeDataContext.Students.DeleteOnSubmit(collegeDataContext.Students.First((studentItem) => studentItem.Id == id));
+                collegeDataContext.SubmitChanges();
+
+                return Ok("item was daleted");
 
             }
             catch (SqlException ex)
@@ -169,4 +126,4 @@ namespace CollegeMVC.Controllers.api
             }
         }
     }
-}
+    }
